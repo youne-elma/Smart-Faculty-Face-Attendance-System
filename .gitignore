@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.crt
+
+# Local data and generated outputs
+backend/data/db/*.sqlite
+backend/data/db/*.sqlite3
+backend/data/db/*.db
+backend/data/imports/*
+backend/data/exports/*
+backend/data/benchmarks/*
+backend/data/known_faces/*
+backend/data/models/*
+!backend/data/imports/.gitkeep
+!backend/data/exports/.gitkeep
+!backend/data/benchmarks/.gitkeep
+!backend/data/known_faces/.gitkeep
+!backend/data/models/.gitkeep
+!backend/data/db/.gitkeep
+
+# Node/frontend
+node_modules/
+dist/
+build/
+.vite/
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
