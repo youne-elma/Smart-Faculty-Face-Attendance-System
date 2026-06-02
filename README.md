@@ -246,6 +246,8 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/camera/status`: verification de disponibilite de l'ESP32-CAM.
 - `GET /api/v1/camera/snapshot`: recuperation d'une image depuis l'ESP32-CAM. Si `/capture` n'est pas disponible, le backend extrait une image JPEG depuis le stream MJPEG.
 - `GET /api/v1/camera/frame-info`: recuperation et decodage OpenCV d'une frame.
+- `GET /api/v1/detection/faces`: detection des visages avec Haar Cascade.
+- `GET /api/v1/detection/preview`: image JPEG annotee avec rectangles de detection.
 
 Tests rapides:
 
@@ -253,7 +255,9 @@ Tests rapides:
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/status
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/frame-info
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/detection/faces
 Invoke-WebRequest http://127.0.0.1:8000/api/v1/camera/snapshot -OutFile snapshot.jpg
+Invoke-WebRequest http://127.0.0.1:8000/api/v1/detection/preview -OutFile detection-preview.jpg
 ```
 
 ## Configuration camera
