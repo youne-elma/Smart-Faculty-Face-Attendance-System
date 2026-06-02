@@ -14,7 +14,10 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
 
     esp32_cam_url: str = "http://192.168.1.30/"
+    esp32_cam_snapshot_path: str = "/capture"
+    esp32_cam_stream_url: str = "http://192.168.1.30:81/stream"
     camera_timeout_seconds: int = 5
+    camera_stream_read_bytes: int = 65_536
 
     admin_username: str = "admin"
     admin_password: str = "change-this-password"
