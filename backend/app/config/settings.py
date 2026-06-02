@@ -1,0 +1,44 @@
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BASE_DIR = Path(__file__).resolve().parents[3]
+
+
+class Settings(BaseSettings):
+    app_name: str = "Smart Faculty Face Attendance System"
+    app_env: str = "development"
+    api_prefix: str = "/api/v1"
+
+    esp32_cam_url: str = "http://192.168.1.30/"
+    camera_timeout_seconds: int = 5
+
+    admin_username: str = "admin"
+    admin_password: str = "change-this-password"
+    secret_key: str = "change-this-secret-key"
+
+    database_path: Path = Field(default=BASE_DIR / "backend/data/db/attendance.sqlite3")
+    imports_dir: Path = Field(default=BASE_DIR / "backend/data/imports")
+    exports_dir: Path = Field(default=BASE_DIR / "backend/data/exports")
+    known_faces_dir: Path = Field(default=BASE_DIR / "backend/data/known_faces")
+    models_dir: Path = Field(default=BASE_DIR / "backend/data/models")
+    benchmarks_dir: Path = Field(default=BASE_DIR / "backend/data/benchmarks")
+
+    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
+    model_config = SettingsConfigDict(
+        env_file=BASE_DIR / "backend/.env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+settings = get_settings()

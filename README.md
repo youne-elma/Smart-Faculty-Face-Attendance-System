@@ -218,7 +218,33 @@ La fiche importee par le professeur doit contenir au minimum:
 7. Lancer le backend.
 8. Lancer l'interface web locale.
 
-Les commandes exactes seront ajoutees apres la mise en place du backend et du frontend.
+Commandes backend:
+
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Sur Windows PowerShell:
+
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+Copy-Item .env.example .env
+uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Routes disponibles dans la premiere version backend:
+
+- `GET /api/v1/health`: verification du backend.
+- `GET /api/v1/camera/status`: verification de disponibilite de l'ESP32-CAM.
+- `GET /api/v1/camera/snapshot`: recuperation d'une image depuis l'ESP32-CAM.
 
 ## Configuration camera
 

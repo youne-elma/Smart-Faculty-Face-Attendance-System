@@ -35,6 +35,8 @@ backend/data/models/*
 !backend/data/known_faces/.gitkeep
 !backend/data/models/.gitkeep
 !backend/data/db/.gitkeep
+cahier_des_charges_PFEM.docx
+cachiers_des_charges_PFEM.docx
 
 # Node/frontend
 node_modules/
