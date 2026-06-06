@@ -126,6 +126,19 @@ La base de donnees doit rester locale sur la Raspberry Pi. Elle servira a stocke
 
 Le choix recommande pour le prototype est SQLite, car il est simple, local, leger et adapte a une Raspberry Pi. Une evolution vers PostgreSQL reste possible si le projet devient multi-postes.
 
+Tables SQLite prevues:
+
+- `students`: informations des etudiants.
+- `student_photos`: references vers les photos des etudiants.
+- `attendance_sessions`: cours, examens ou sessions de presence.
+- `attendance_records`: statut de presence par etudiant et par session.
+- `admin_users`: comptes administrateurs/professeurs avec mot de passe hache.
+
+Relation importante:
+
+- Un `admin_user` peut creer plusieurs `attendance_sessions`.
+- Une `attendance_session` peut etre rattachee a un `admin_user` via `admin_user_id`.
+
 ## Comparaison des algorithmes
 
 Le projet est organise pour permettre l'ajout progressif de plusieurs detecteurs et modeles de reconnaissance. L'objectif est de comparer:
@@ -273,6 +286,8 @@ Routes disponibles dans la premiere version backend:
 
 - `GET /api/v1/health`: verification du backend.
 - `GET /api/v1/camera/status`: verification de disponibilite de l'ESP32-CAM.
+- `GET /api/v1/database/status`: statut de la base SQLite locale.
+- `POST /api/v1/database/initialize`: creation des tables SQLite.
 - `GET /api/v1/camera/snapshot`: recuperation d'une image depuis l'ESP32-CAM. Si `/capture` n'est pas disponible, le backend extrait une image JPEG depuis le stream MJPEG.
 - `GET /api/v1/camera/frame-info`: recuperation et decodage OpenCV d'une frame.
 - `GET /api/v1/detection/faces`: detection des visages avec MediaPipe Face Detection.
@@ -284,6 +299,8 @@ Tests rapides:
 
 ```powershell
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/database/status
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/database/initialize
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/status
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/frame-info
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/detection/faces
