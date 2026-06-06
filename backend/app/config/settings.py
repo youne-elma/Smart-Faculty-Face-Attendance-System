@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     camera_timeout_seconds: int = 5
     camera_stream_read_bytes: int = 65_536
 
+    facenet_pretrained_model: str = "vggface2"
+    face_recognition_threshold: float = 0.75
+
     admin_username: str = "admin"
     admin_password: str = "change-this-password"
     secret_key: str = "change-this-secret-key"

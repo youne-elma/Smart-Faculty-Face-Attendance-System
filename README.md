@@ -231,6 +231,14 @@ cp .env.example .env
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+Pour activer la reconnaissance FaceNet, installer aussi les dependances IA:
+
+```bash
+pip install -r requirements-facenet.txt
+```
+
+Note: FaceNet est charge uniquement quand la route de reconnaissance est appelee. Le backend peut donc demarrer sans `facenet-pytorch`, mais `GET /api/v1/recognition/identify` retournera une erreur tant que ces dependances ne sont pas installees.
+
 Sur Windows PowerShell:
 
 ```powershell
@@ -242,6 +250,12 @@ Copy-Item .env.example .env
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
+Pour activer la reconnaissance FaceNet sur Windows:
+
+```powershell
+pip install -r requirements-facenet.txt
+```
+
 Routes disponibles dans la premiere version backend:
 
 - `GET /api/v1/health`: verification du backend.
@@ -250,6 +264,7 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/camera/frame-info`: recuperation et decodage OpenCV d'une frame.
 - `GET /api/v1/detection/faces`: detection des visages avec Haar Cascade.
 - `GET /api/v1/detection/preview`: image JPEG annotee avec rectangles de detection.
+- `GET /api/v1/recognition/identify`: reconnaissance FaceNet sur la frame camera courante.
 - `GET /api/v1/students/known`: liste des etudiants connus et des photos de reference disponibles.
 
 Tests rapides:
@@ -259,6 +274,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/status
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/frame-info
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/detection/faces
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/recognition/identify
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/students/known
 Invoke-WebRequest http://127.0.0.1:8000/api/v1/camera/snapshot -OutFile snapshot.jpg
 Invoke-WebRequest http://127.0.0.1:8000/api/v1/detection/preview -OutFile detection-preview.jpg
