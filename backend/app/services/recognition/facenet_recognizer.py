@@ -8,7 +8,7 @@ from app.config.settings import settings
 from app.models.face import FaceBox
 from app.models.recognition import RecognitionMatch
 from app.models.student import KnownStudent
-from app.services.detection.haar_detector import HaarCascadeDetector
+from app.services.detection.mediapipe_detector import MediaPipeFaceDetector
 from app.services.students.student_service import StudentService
 
 
@@ -35,7 +35,7 @@ class FaceNetRecognizer:
 
     def build_known_index(self) -> list[KnownFaceEmbedding]:
         students = StudentService().list_known_students().students
-        detector = HaarCascadeDetector()
+        detector = MediaPipeFaceDetector()
         known_embeddings: list[KnownFaceEmbedding] = []
 
         for student in students:

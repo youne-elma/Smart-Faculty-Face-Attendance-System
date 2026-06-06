@@ -7,7 +7,10 @@ from app.services.camera.esp32_camera import (
     CameraStreamFrameError,
     Esp32CameraClient,
 )
-from app.services.detection.haar_detector import HaarCascadeDetector, HaarCascadeLoadError
+from app.services.detection.mediapipe_detector import (
+    MediaPipeDependencyError,
+    MediaPipeFaceDetector,
+)
 
 router = APIRouter()
 
@@ -52,8 +55,8 @@ def detection_preview() -> Response:
     return Response(content=image_bytes, media_type="image/jpeg")
 
 
-def _build_detector() -> HaarCascadeDetector:
+def _build_detector() -> MediaPipeFaceDetector:
     try:
-        return HaarCascadeDetector()
-    except HaarCascadeLoadError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        return MediaPipeFaceDetector()
+    except MediaPipeDependencyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc

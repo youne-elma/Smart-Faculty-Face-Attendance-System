@@ -21,6 +21,10 @@ class Settings(BaseSettings):
 
     facenet_pretrained_model: str = "vggface2"
     face_recognition_threshold: float = 0.75
+    mediapipe_face_min_confidence: float = 0.6
+    mediapipe_face_model_path: Path = Field(
+        default=BASE_DIR / "backend/data/models/blaze_face_short_range.tflite"
+    )
 
     admin_username: str = "admin"
     admin_password: str = "change-this-password"

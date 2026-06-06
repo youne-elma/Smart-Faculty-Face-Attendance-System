@@ -70,10 +70,11 @@ Interface web locale
 
 ### Detection faciale
 
-La premiere version utilise Haar Cascade via OpenCV pour la detection des visages. Ce choix est leger, simple a deployer et compatible avec les limites materielles d'une Raspberry Pi.
+La version active utilise MediaPipe Face Detection pour detecter les visages dans le flux ESP32-CAM. Haar Cascade reste conserve dans le projet pour les comparaisons futures.
 
 Algorithmes prevus pour comparaison:
 
+- MediaPipe Face Detection
 - Haar Cascade
 - MTCNN
 - YOLOFace
@@ -256,13 +257,25 @@ Pour activer la reconnaissance FaceNet sur Windows:
 pip install -r requirements-facenet.txt
 ```
 
+MediaPipe Face Detection utilise le modele local:
+
+```text
+backend/data/models/blaze_face_short_range.tflite
+```
+
+Si ce fichier manque, telecharger le modele officiel BlazeFace short range:
+
+```powershell
+Invoke-WebRequest https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite -OutFile backend/data/models/blaze_face_short_range.tflite
+```
+
 Routes disponibles dans la premiere version backend:
 
 - `GET /api/v1/health`: verification du backend.
 - `GET /api/v1/camera/status`: verification de disponibilite de l'ESP32-CAM.
 - `GET /api/v1/camera/snapshot`: recuperation d'une image depuis l'ESP32-CAM. Si `/capture` n'est pas disponible, le backend extrait une image JPEG depuis le stream MJPEG.
 - `GET /api/v1/camera/frame-info`: recuperation et decodage OpenCV d'une frame.
-- `GET /api/v1/detection/faces`: detection des visages avec Haar Cascade.
+- `GET /api/v1/detection/faces`: detection des visages avec MediaPipe Face Detection.
 - `GET /api/v1/detection/preview`: image JPEG annotee avec rectangles de detection.
 - `GET /api/v1/recognition/identify`: reconnaissance FaceNet sur la frame camera courante.
 - `GET /api/v1/students/known`: liste des etudiants connus et des photos de reference disponibles.

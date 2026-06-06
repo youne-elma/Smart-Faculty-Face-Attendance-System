@@ -7,7 +7,10 @@ from app.services.camera.esp32_camera import (
     CameraStreamFrameError,
     Esp32CameraClient,
 )
-from app.services.detection.haar_detector import HaarCascadeDetector, HaarCascadeLoadError
+from app.services.detection.mediapipe_detector import (
+    MediaPipeDependencyError,
+    MediaPipeFaceDetector,
+)
 from app.services.recognition.facenet_recognizer import (
     FaceNetDependencyError,
     FaceNetRecognizer,
@@ -21,7 +24,7 @@ router = APIRouter()
 def identify_faces() -> FaceRecognitionResult:
     try:
         camera = Esp32CameraClient()
-        detector = HaarCascadeDetector()
+        detector = MediaPipeFaceDetector()
         recognizer = FaceNetRecognizer()
 
         frame = camera.fetch_frame()
@@ -40,8 +43,8 @@ def identify_faces() -> FaceRecognitionResult:
             )
     except FaceNetDependencyError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
-    except HaarCascadeLoadError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except MediaPipeDependencyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
     except (CameraConnectionError, CameraStreamFrameError) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except (CameraFrameDecodeError, KnownFaceIndexError, ValueError) as exc:
