@@ -184,7 +184,9 @@ PFE_Project_v2.0/
 
 ### Base des etudiants connus
 
-Chaque etudiant doit avoir des images de reference ou un embedding deja calcule. Exemple d'organisation possible:
+La version finale devra recuperer les photos depuis la base de donnees locale securisee. Pour le developpement et les tests, un provider local temporaire lit les photos placees dans `backend/data/known_faces/`.
+
+Chaque etudiant doit avoir des images de reference ou un embedding deja calcule. Exemple d'organisation locale possible:
 
 ```text
 backend/data/known_faces/
@@ -248,6 +250,7 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/camera/frame-info`: recuperation et decodage OpenCV d'une frame.
 - `GET /api/v1/detection/faces`: detection des visages avec Haar Cascade.
 - `GET /api/v1/detection/preview`: image JPEG annotee avec rectangles de detection.
+- `GET /api/v1/students/known`: liste des etudiants connus et des photos de reference disponibles.
 
 Tests rapides:
 
@@ -256,6 +259,7 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/status
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/frame-info
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/detection/faces
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/students/known
 Invoke-WebRequest http://127.0.0.1:8000/api/v1/camera/snapshot -OutFile snapshot.jpg
 Invoke-WebRequest http://127.0.0.1:8000/api/v1/detection/preview -OutFile detection-preview.jpg
 ```
