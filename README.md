@@ -285,6 +285,8 @@ Invoke-WebRequest https://storage.googleapis.com/mediapipe-models/face_detector/
 Routes disponibles dans la premiere version backend:
 
 - `GET /api/v1/health`: verification du backend.
+- `POST /api/v1/auth/login`: connexion admin/professeur et generation JWT.
+- `GET /api/v1/auth/me`: verification du token admin courant.
 - `GET /api/v1/camera/status`: verification de disponibilite de l'ESP32-CAM.
 - `GET /api/v1/database/status`: statut de la base SQLite locale.
 - `POST /api/v1/database/initialize`: creation des tables SQLite.
@@ -301,6 +303,7 @@ Tests rapides:
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/health
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/database/status
 Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/database/initialize
+python scripts/create_admin.py
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/status
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/camera/frame-info
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/detection/faces
@@ -308,6 +311,14 @@ Invoke-RestMethod http://127.0.0.1:8000/api/v1/recognition/identify
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/students/known
 Invoke-WebRequest http://127.0.0.1:8000/api/v1/camera/snapshot -OutFile snapshot.jpg
 Invoke-WebRequest http://127.0.0.1:8000/api/v1/detection/preview -OutFile detection-preview.jpg
+```
+
+Test login admin:
+
+```powershell
+$body = @{ username = "admin"; password = "change-this-password" } | ConvertTo-Json
+$token = (Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/auth/login -ContentType "application/json" -Body $body).access_token
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/auth/me -Headers @{ Authorization = "Bearer $token" }
 ```
 
 ## Configuration camera

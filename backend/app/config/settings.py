@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     admin_username: str = "admin"
     admin_password: str = "change-this-password"
     secret_key: str = "change-this-secret-key"
+    access_token_expire_minutes: int = 480
 
     database_path: Path = Field(default=BASE_DIR / "backend/data/db/attendance.sqlite3")
     imports_dir: Path = Field(default=BASE_DIR / "backend/data/imports")
