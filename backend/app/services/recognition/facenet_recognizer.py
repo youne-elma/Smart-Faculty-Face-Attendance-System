@@ -40,7 +40,7 @@ class FaceNetRecognizer:
 
         for student in students:
             for photo in student.photos:
-                photo_path = settings.known_faces_dir / Path(photo.source_uri)
+                photo_path = self._resolve_photo_path(photo.source_uri)
                 frame = cv2.imread(str(photo_path))
 
                 if frame is None:
@@ -136,3 +136,11 @@ class FaceNetRecognizer:
             return 0.0
 
         return float(np.dot(left, right) / denominator)
+
+    def _resolve_photo_path(self, source_uri: str) -> Path:
+        photo_path = Path(source_uri)
+
+        if photo_path.is_absolute():
+            return photo_path
+
+        return settings.known_faces_dir / photo_path

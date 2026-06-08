@@ -296,6 +296,10 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/detection/preview`: image JPEG annotee avec rectangles de detection.
 - `GET /api/v1/recognition/identify`: reconnaissance FaceNet sur la frame camera courante.
 - `GET /api/v1/students/known`: liste des etudiants connus et des photos de reference disponibles.
+- `GET /api/v1/students`: liste des etudiants en base, protegee par JWT.
+- `POST /api/v1/students`: creation d'un etudiant, protegee par JWT.
+- `GET /api/v1/students/{student_code}`: detail d'un etudiant, protege par JWT.
+- `POST /api/v1/students/{student_code}/photos`: ajout d'une reference photo, protegee par JWT.
 
 Tests rapides:
 
@@ -319,6 +323,29 @@ Test login admin:
 $body = @{ username = "admin"; password = "change-this-password" } | ConvertTo-Json
 $token = (Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/auth/login -ContentType "application/json" -Body $body).access_token
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/auth/me -Headers @{ Authorization = "Bearer $token" }
+```
+
+Test creation etudiant en base:
+
+```powershell
+$headers = @{ Authorization = "Bearer $token" }
+$student = @{
+  student_code = "D131609106"
+  first_name = "Youness"
+  last_name = "ElMarhoum"
+  group_name = "GI"
+  email = $null
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/students -Headers $headers -ContentType "application/json" -Body $student
+
+$photo = @{
+  source_uri = "D131609106_ElMarhoum_Youness/image_1.jpeg"
+  storage_type = "local_file"
+  is_primary = $true
+} | ConvertTo-Json
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/students/D131609106/photos -Headers $headers -ContentType "application/json" -Body $photo
+
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/students/known
 ```
 
 ## Configuration camera

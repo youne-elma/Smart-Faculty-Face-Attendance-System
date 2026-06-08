@@ -3,6 +3,7 @@ from typing import Protocol
 
 from app.config.settings import settings
 from app.models.student import KnownStudent, StudentPhotoReference
+from app.services.students.student_repository import StudentRepository
 
 
 SUPPORTED_PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
@@ -60,6 +61,7 @@ class LocalKnownFacesProvider:
                 StudentPhotoReference(
                     file_name=photo_path.name,
                     source_uri=self._relative_source_uri(photo_path),
+                    storage_type="local_file",
                 )
             )
 
@@ -88,3 +90,49 @@ class LocalKnownFacesProvider:
     ) -> str:
         full_name = " ".join(part for part in [first_name, last_name] if part)
         return f"{student_id} - {full_name}" if full_name else student_id
+
+
+class DatabaseStudentPhotoProvider:
+    source = "database_students"
+
+    def __init__(self, repository: StudentRepository | None = None) -> None:
+        self.repository = repository or StudentRepository()
+
+    def list_known_students(self) -> list[KnownStudent]:
+        rows = self.repository.list_known_students_with_photos()
+        students_by_code: dict[str, KnownStudent] = {}
+
+        for row in rows:
+            student_code = str(row["student_code"])
+            photo = StudentPhotoReference(
+                file_name=Path(str(row["source_uri"])).name,
+                source_uri=str(row["source_uri"]),
+                storage_type=str(row["storage_type"]),
+            )
+
+            if student_code not in students_by_code:
+                display_name = self._build_display_name(
+                    student_code=student_code,
+                    first_name=str(row["first_name"]),
+                    last_name=str(row["last_name"]),
+                )
+                students_by_code[student_code] = KnownStudent(
+                    student_id=student_code,
+                    first_name=str(row["first_name"]),
+                    last_name=str(row["last_name"]),
+                    display_name=display_name,
+                    photos_count=0,
+                    photos=[],
+                    source=self.source,
+                )
+
+            students_by_code[student_code].photos.append(photo)
+
+        students = list(students_by_code.values())
+        for student in students:
+            student.photos_count = len(student.photos)
+
+        return students
+
+    def _build_display_name(self, student_code: str, first_name: str, last_name: str) -> str:
+        return f"{student_code} - {first_name} {last_name}"
