@@ -66,7 +66,7 @@ class FaceNetRecognizer:
         self._known_index_cache = None
         return self.build_known_index()
 
-    def identify_face(
+    def find_best_match(
         self,
         frame: np.ndarray,
         face: FaceBox,
@@ -87,10 +87,7 @@ class FaceNetRecognizer:
                     score=score,
                 )
 
-        if best_match and best_match.score >= self.threshold:
-            return best_match
-
-        return None
+        return best_match
 
     def embed_face(self, frame: np.ndarray, face: FaceBox) -> np.ndarray:
         face_image = self._crop_face(frame, face)

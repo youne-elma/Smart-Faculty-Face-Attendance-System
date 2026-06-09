@@ -295,6 +295,7 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/detection/faces`: detection des visages avec MediaPipe Face Detection.
 - `GET /api/v1/detection/preview`: image JPEG annotee avec rectangles de detection.
 - `GET /api/v1/recognition/identify`: reconnaissance FaceNet sur la frame camera courante.
+- `POST /api/v1/recognition/known-index/refresh`: rafraichissement des embeddings connus, protege par JWT.
 - `GET /api/v1/students/known`: liste des etudiants connus et des photos de reference disponibles.
 - `GET /api/v1/students`: liste des etudiants en base, protegee par JWT.
 - `POST /api/v1/students`: creation d'un etudiant, protegee par JWT.
@@ -322,7 +323,19 @@ Performance IA:
 - Le detecteur MediaPipe est charge une seule fois puis reutilise.
 - Le modele FaceNet est charge une seule fois puis reutilise.
 - Les embeddings des visages connus sont mis en cache pendant l'execution du backend.
-- Si les photos connues changent, il faudra rafraichir l'index de reconnaissance dans une prochaine route dediee.
+- Si les photos connues changent, il faut synchroniser les photos puis rafraichir l'index de reconnaissance.
+
+Synchroniser les photos locales vers SQLite:
+
+```powershell
+python scripts/sync_known_faces.py
+```
+
+Rafraichir l'index FaceNet apres ajout de photos:
+
+```powershell
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/recognition/known-index/refresh -Headers $headers
+```
 
 Test login admin:
 

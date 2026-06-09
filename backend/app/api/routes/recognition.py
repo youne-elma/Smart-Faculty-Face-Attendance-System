@@ -1,5 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
+from app.api.dependencies import get_current_admin
+from app.models.auth import AdminUserPublic
 from app.models.recognition import FaceRecognitionResult, RecognizedFace
 from app.services.camera.esp32_camera import (
     CameraConnectionError,
@@ -9,7 +11,7 @@ from app.services.camera.esp32_camera import (
 )
 from app.services.detection.mediapipe_detector import (
     MediaPipeDependencyError,
-    MediaPipeFaceDetector,
+    get_mediapipe_face_detector,
 )
 from app.services.recognition.facenet_recognizer import (
     FaceNetDependencyError,
@@ -25,7 +27,7 @@ router = APIRouter()
 def identify_faces() -> FaceRecognitionResult:
     try:
         camera = Esp32CameraClient()
-        detector = MediaPipeFaceDetector()
+        detector = get_mediapipe_face_detector()
         recognizer = get_facenet_recognizer()
 
         frame = camera.fetch_frame()
@@ -34,11 +36,11 @@ def identify_faces() -> FaceRecognitionResult:
 
         recognized_faces: list[RecognizedFace] = []
         for face in faces:
-            match = recognizer.identify_face(frame, face, known_embeddings)
+            match = recognizer.find_best_match(frame, face, known_embeddings)
             recognized_faces.append(
                 RecognizedFace(
                     box=face,
-                    recognized=match is not None,
+                    recognized=match is not None and match.score >= recognizer.threshold,
                     best_match=match,
                 )
             )
@@ -59,3 +61,21 @@ def identify_faces() -> FaceRecognitionResult:
         faces_count=len(recognized_faces),
         faces=recognized_faces,
     )
+
+
+@router.post("/known-index/refresh")
+def refresh_known_index(
+    current_admin: AdminUserPublic = Depends(get_current_admin),
+) -> dict[str, object]:
+    try:
+        recognizer = get_facenet_recognizer()
+        known_embeddings = recognizer.refresh_known_index()
+    except FaceNetDependencyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except MediaPipeDependencyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    return {
+        "status": "ok",
+        "known_embeddings_count": len(known_embeddings),
+    }
