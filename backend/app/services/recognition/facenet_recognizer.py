@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 
 import cv2
@@ -8,7 +9,7 @@ from app.config.settings import settings
 from app.models.face import FaceBox
 from app.models.recognition import RecognitionMatch
 from app.models.student import KnownStudent
-from app.services.detection.mediapipe_detector import MediaPipeFaceDetector
+from app.services.detection.mediapipe_detector import get_mediapipe_face_detector
 from app.services.students.student_service import StudentService
 
 
@@ -32,10 +33,14 @@ class FaceNetRecognizer:
     def __init__(self, threshold: float | None = None) -> None:
         self.threshold = threshold or settings.face_recognition_threshold
         self.device, self.model, self.torch = self._load_model()
+        self._known_index_cache: list[KnownFaceEmbedding] | None = None
 
     def build_known_index(self) -> list[KnownFaceEmbedding]:
+        if self._known_index_cache is not None:
+            return self._known_index_cache
+
         students = StudentService().list_known_students().students
-        detector = MediaPipeFaceDetector()
+        detector = get_mediapipe_face_detector()
         known_embeddings: list[KnownFaceEmbedding] = []
 
         for student in students:
@@ -54,7 +59,12 @@ class FaceNetRecognizer:
                 embedding = self.embed_face(frame, face)
                 known_embeddings.append(KnownFaceEmbedding(student=student, embedding=embedding))
 
+        self._known_index_cache = known_embeddings
         return known_embeddings
+
+    def refresh_known_index(self) -> list[KnownFaceEmbedding]:
+        self._known_index_cache = None
+        return self.build_known_index()
 
     def identify_face(
         self,
@@ -96,17 +106,7 @@ class FaceNetRecognizer:
         return embedding / norm
 
     def _load_model(self):
-        try:
-            import torch
-            from facenet_pytorch import InceptionResnetV1
-        except ImportError as exc:
-            raise FaceNetDependencyError(
-                "FaceNet dependencies are missing. Install facenet-pytorch and torch first."
-            ) from exc
-
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        model = InceptionResnetV1(pretrained=settings.facenet_pretrained_model).eval().to(device)
-        return device, model, torch
+        return _load_facenet_model()
 
     def _preprocess(self, face_image: np.ndarray):
         resized = cv2.resize(face_image, (160, 160), interpolation=cv2.INTER_AREA)
@@ -144,3 +144,23 @@ class FaceNetRecognizer:
             return photo_path
 
         return settings.known_faces_dir / photo_path
+
+
+@lru_cache(maxsize=1)
+def _load_facenet_model():
+    try:
+        import torch
+        from facenet_pytorch import InceptionResnetV1
+    except ImportError as exc:
+        raise FaceNetDependencyError(
+            "FaceNet dependencies are missing. Install facenet-pytorch and torch first."
+        ) from exc
+
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    model = InceptionResnetV1(pretrained=settings.facenet_pretrained_model).eval().to(device)
+    return device, model, torch
+
+
+@lru_cache(maxsize=1)
+def get_facenet_recognizer() -> FaceNetRecognizer:
+    return FaceNetRecognizer()

@@ -10,6 +10,7 @@ from app.services.camera.esp32_camera import (
 from app.services.detection.mediapipe_detector import (
     MediaPipeDependencyError,
     MediaPipeFaceDetector,
+    get_mediapipe_face_detector,
 )
 
 router = APIRouter()
@@ -57,6 +58,6 @@ def detection_preview() -> Response:
 
 def _build_detector() -> MediaPipeFaceDetector:
     try:
-        return MediaPipeFaceDetector()
+        return get_mediapipe_face_detector()
     except MediaPipeDependencyError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc

@@ -2,10 +2,12 @@ from functools import lru_cache
 from pathlib import Path
 
 from pydantic import Field
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 BASE_DIR = Path(__file__).resolve().parents[3]
+BACKEND_DIR = BASE_DIR / "backend"
 
 
 class Settings(BaseSettings):
@@ -39,6 +41,28 @@ class Settings(BaseSettings):
     benchmarks_dir: Path = Field(default=BASE_DIR / "backend/data/benchmarks")
 
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
+    @model_validator(mode="after")
+    def resolve_relative_paths(self) -> "Settings":
+        self.database_path = self._resolve_backend_path(self.database_path)
+        self.imports_dir = self._resolve_backend_path(self.imports_dir)
+        self.exports_dir = self._resolve_backend_path(self.exports_dir)
+        self.known_faces_dir = self._resolve_backend_path(self.known_faces_dir)
+        self.models_dir = self._resolve_backend_path(self.models_dir)
+        self.benchmarks_dir = self._resolve_backend_path(self.benchmarks_dir)
+        self.mediapipe_face_model_path = self._resolve_backend_path(
+            self.mediapipe_face_model_path
+        )
+        return self
+
+    def _resolve_backend_path(self, path: Path) -> Path:
+        if path.is_absolute():
+            return path
+
+        if path.parts and path.parts[0] == "backend":
+            return BASE_DIR / path
+
+        return BACKEND_DIR / path
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / "backend/.env",

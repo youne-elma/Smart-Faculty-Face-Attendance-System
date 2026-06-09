@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 import cv2
 import numpy as np
 
@@ -89,3 +91,8 @@ class MediaPipeFaceDetector:
             min_detection_confidence=self.min_confidence,
         )
         return mp, vision, vision.FaceDetector.create_from_options(options)
+
+
+@lru_cache(maxsize=1)
+def get_mediapipe_face_detector() -> MediaPipeFaceDetector:
+    return MediaPipeFaceDetector()

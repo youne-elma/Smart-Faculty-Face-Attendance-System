@@ -317,6 +317,13 @@ Invoke-WebRequest http://127.0.0.1:8000/api/v1/camera/snapshot -OutFile snapshot
 Invoke-WebRequest http://127.0.0.1:8000/api/v1/detection/preview -OutFile detection-preview.jpg
 ```
 
+Performance IA:
+
+- Le detecteur MediaPipe est charge une seule fois puis reutilise.
+- Le modele FaceNet est charge une seule fois puis reutilise.
+- Les embeddings des visages connus sont mis en cache pendant l'execution du backend.
+- Si les photos connues changent, il faudra rafraichir l'index de reconnaissance dans une prochaine route dediee.
+
 Test login admin:
 
 ```powershell

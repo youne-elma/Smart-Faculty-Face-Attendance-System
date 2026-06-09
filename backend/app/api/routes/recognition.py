@@ -15,6 +15,7 @@ from app.services.recognition.facenet_recognizer import (
     FaceNetDependencyError,
     FaceNetRecognizer,
     KnownFaceIndexError,
+    get_facenet_recognizer,
 )
 
 router = APIRouter()
@@ -25,7 +26,7 @@ def identify_faces() -> FaceRecognitionResult:
     try:
         camera = Esp32CameraClient()
         detector = MediaPipeFaceDetector()
-        recognizer = FaceNetRecognizer()
+        recognizer = get_facenet_recognizer()
 
         frame = camera.fetch_frame()
         faces = detector.detect(frame)
