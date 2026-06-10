@@ -404,6 +404,20 @@ Invoke-RestMethod -Method Post "http://127.0.0.1:8000/api/v1/attendance/sessions
 Invoke-RestMethod "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)" -Headers $headers
 ```
 
+Commandes frontend:
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+Interface locale:
+
+```text
+http://127.0.0.1:5173
+```
+
 ## Configuration camera
 
 Adresse ESP32-CAM par defaut:
