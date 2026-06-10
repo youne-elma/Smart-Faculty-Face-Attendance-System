@@ -22,15 +22,15 @@ class Settings(BaseSettings):
     camera_stream_read_bytes: int = 65_536
 
     facenet_pretrained_model: str = "vggface2"
-    face_recognition_threshold: float = 0.75
+    face_recognition_threshold: float = 0.7
     mediapipe_face_min_confidence: float = 0.6
     mediapipe_face_model_path: Path = Field(
         default=BASE_DIR / "backend/data/models/blaze_face_short_range.tflite"
     )
 
     admin_username: str = "admin"
-    admin_password: str = "change-this-password"
-    secret_key: str = "change-this-secret-key"
+    admin_password: str = "admin1234"
+    secret_key: str = "ait-melloul"
     access_token_expire_minutes: int = 480
 
     database_path: Path = Field(default=BASE_DIR / "backend/data/db/attendance.sqlite3")

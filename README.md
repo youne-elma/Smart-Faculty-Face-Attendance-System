@@ -287,6 +287,11 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/health`: verification du backend.
 - `POST /api/v1/auth/login`: connexion admin/professeur et generation JWT.
 - `GET /api/v1/auth/me`: verification du token admin courant.
+- `POST /api/v1/attendance/sessions`: creation d'une session de presence, protegee par JWT.
+- `GET /api/v1/attendance/sessions`: liste des sessions, protegee par JWT.
+- `GET /api/v1/attendance/sessions/{session_id}`: detail d'une session avec records, protege par JWT.
+- `POST /api/v1/attendance/sessions/{session_id}/import`: import Excel des etudiants attendus.
+- `GET /api/v1/attendance/sessions/{session_id}/export`: export Excel des presences et absences.
 - `GET /api/v1/camera/status`: verification de disponibilite de l'ESP32-CAM.
 - `GET /api/v1/database/status`: statut de la base SQLite locale.
 - `POST /api/v1/database/initialize`: creation des tables SQLite.
@@ -366,6 +371,29 @@ $photo = @{
 Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/students/D131609106/photos -Headers $headers -ContentType "application/json" -Body $photo
 
 Invoke-RestMethod http://127.0.0.1:8000/api/v1/students/known
+```
+
+Test session de presence:
+
+```powershell
+$headers = @{ Authorization = "Bearer $token" }
+$session = @{
+  title = "Examen IA"
+  session_type = "exam"
+  course_name = "Intelligence Artificielle"
+  group_name = "GI"
+  starts_at = "2026-06-08T09:00:00"
+} | ConvertTo-Json
+$createdSession = Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/attendance/sessions -Headers $headers -ContentType "application/json" -Body $session
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/attendance/sessions -Headers $headers
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id) -Headers $headers
+```
+
+Import/export Excel:
+
+```powershell
+Invoke-RestMethod -Method Post "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)/import" -Headers $headers -Form @{ file = Get-Item ".\data\imports\fiche_absence.xlsx" }
+Invoke-WebRequest "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)/export" -Headers $headers -OutFile ".\data\exports\attendance_export.xlsx"
 ```
 
 ## Configuration camera
