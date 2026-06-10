@@ -146,5 +146,72 @@ class AttendanceRepository:
 
         return record
 
+    def get_record_by_student_code(
+        self,
+        session_id: int,
+        student_code: str,
+    ) -> sqlite3.Row | None:
+        with get_connection() as connection:
+            return connection.execute(
+                """
+                SELECT
+                    ar.id,
+                    ar.session_id,
+                    ar.student_id,
+                    s.student_code,
+                    s.first_name,
+                    s.last_name,
+                    s.group_name,
+                    ar.status,
+                    ar.recognized_at,
+                    ar.recognition_score
+                FROM attendance_records ar
+                JOIN students s ON s.id = ar.student_id
+                WHERE ar.session_id = ? AND s.student_code = ?;
+                """,
+                (session_id, student_code),
+            ).fetchone()
+
+    def mark_present(
+        self,
+        session_id: int,
+        student_code: str,
+        recognition_score: float,
+    ) -> sqlite3.Row | None:
+        with get_connection() as connection:
+            student = connection.execute(
+                "SELECT id FROM students WHERE student_code = ?;",
+                (student_code,),
+            ).fetchone()
+
+            if student is None:
+                return None
+
+            record = connection.execute(
+                """
+                SELECT id
+                FROM attendance_records
+                WHERE session_id = ? AND student_id = ?;
+                """,
+                (session_id, int(student["id"])),
+            ).fetchone()
+
+            if record is None:
+                return None
+
+            connection.execute(
+                """
+                UPDATE attendance_records
+                SET status = 'present',
+                    recognized_at = CURRENT_TIMESTAMP,
+                    recognition_score = ?,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?;
+                """,
+                (recognition_score, int(record["id"])),
+            )
+
+        return self.get_record_by_student_code(session_id, student_code)
+
     def _format_datetime(self, value: datetime | None) -> str | None:
         return value.isoformat() if value else None

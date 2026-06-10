@@ -1,12 +1,16 @@
 from app.models.attendance import (
     AttendanceImportResult,
     AttendanceRecordRead,
+    AttendanceRecognitionResult,
     AttendanceSessionCreate,
     AttendanceSessionDetail,
     AttendanceSessionRead,
 )
+from app.services.camera.esp32_camera import Esp32CameraClient
 from app.services.attendance.attendance_repository import AttendanceRepository
 from app.services.attendance.excel_io import AttendanceExcelReader, AttendanceExcelWriter
+from app.services.detection.mediapipe_detector import get_mediapipe_face_detector
+from app.services.recognition.facenet_recognizer import get_facenet_recognizer
 
 
 class AttendanceSessionNotFoundError(RuntimeError):
@@ -77,6 +81,69 @@ class AttendanceService:
         file_name = f"attendance_session_{session_id}.xlsx"
         file_bytes = AttendanceExcelWriter().write_session_export(detail, detail.records)
         return file_name, file_bytes
+
+    def recognize_attendance(self, session_id: int) -> AttendanceRecognitionResult:
+        if self.repository.get_session(session_id) is None:
+            raise AttendanceSessionNotFoundError(f"Attendance session not found: {session_id}")
+
+        frame = Esp32CameraClient().fetch_frame()
+        detector = get_mediapipe_face_detector()
+        recognizer = get_facenet_recognizer()
+
+        faces = detector.detect(frame)
+        if not faces:
+            return AttendanceRecognitionResult(
+                session_id=session_id,
+                faces_count=0,
+                recognized=False,
+                message="No face detected",
+            )
+
+        known_embeddings = recognizer.build_known_index()
+        face = max(faces, key=lambda item: item.width * item.height)
+        match = recognizer.find_best_match(frame, face, known_embeddings)
+
+        if match is None:
+            return AttendanceRecognitionResult(
+                session_id=session_id,
+                faces_count=len(faces),
+                recognized=False,
+                message="No known face match found",
+            )
+
+        if match.score < recognizer.threshold:
+            return AttendanceRecognitionResult(
+                session_id=session_id,
+                faces_count=len(faces),
+                recognized=False,
+                student_code=match.student_id,
+                display_name=match.display_name,
+                score=match.score,
+                message="Best match score is below threshold",
+            )
+
+        record = self.repository.mark_present(session_id, match.student_id, match.score)
+        if record is None:
+            return AttendanceRecognitionResult(
+                session_id=session_id,
+                faces_count=len(faces),
+                recognized=True,
+                student_code=match.student_id,
+                display_name=match.display_name,
+                score=match.score,
+                message="Student recognized but not found in this attendance session",
+            )
+
+        return AttendanceRecognitionResult(
+            session_id=session_id,
+            faces_count=len(faces),
+            recognized=True,
+            student_code=match.student_id,
+            display_name=match.display_name,
+            score=match.score,
+            status=str(record["status"]),
+            message="Attendance marked as present",
+        )
 
     def _to_session_read(self, row) -> AttendanceSessionRead:
         return AttendanceSessionRead(

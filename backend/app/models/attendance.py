@@ -52,3 +52,14 @@ class AttendanceImportResult(BaseModel):
 class AttendanceExportResult(BaseModel):
     session_id: int
     file_name: str
+
+
+class AttendanceRecognitionResult(BaseModel):
+    session_id: int
+    faces_count: int
+    recognized: bool
+    student_code: str | None = None
+    display_name: str | None = None
+    score: float | None = None
+    status: str | None = None
+    message: str

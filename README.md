@@ -291,6 +291,7 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/attendance/sessions`: liste des sessions, protegee par JWT.
 - `GET /api/v1/attendance/sessions/{session_id}`: detail d'une session avec records, protege par JWT.
 - `POST /api/v1/attendance/sessions/{session_id}/import`: import Excel des etudiants attendus.
+- `POST /api/v1/attendance/sessions/{session_id}/recognize`: reconnaissance camera et marquage present.
 - `GET /api/v1/attendance/sessions/{session_id}/export`: export Excel des presences et absences.
 - `GET /api/v1/camera/status`: verification de disponibilite de l'ESP32-CAM.
 - `GET /api/v1/database/status`: statut de la base SQLite locale.
@@ -394,6 +395,13 @@ Import/export Excel:
 ```powershell
 Invoke-RestMethod -Method Post "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)/import" -Headers $headers -Form @{ file = Get-Item ".\data\imports\fiche_absence.xlsx" }
 Invoke-WebRequest "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)/export" -Headers $headers -OutFile ".\data\exports\attendance_export.xlsx"
+```
+
+Reconnaissance et marquage automatique:
+
+```powershell
+Invoke-RestMethod -Method Post "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)/recognize" -Headers $headers
+Invoke-RestMethod "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)" -Headers $headers
 ```
 
 ## Configuration camera

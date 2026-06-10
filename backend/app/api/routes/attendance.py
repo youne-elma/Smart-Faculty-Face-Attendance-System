@@ -3,9 +3,20 @@ from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFil
 from app.api.dependencies import get_current_admin
 from app.models.attendance import (
     AttendanceImportResult,
+    AttendanceRecognitionResult,
     AttendanceSessionCreate,
     AttendanceSessionDetail,
     AttendanceSessionRead,
+)
+from app.services.camera.esp32_camera import (
+    CameraConnectionError,
+    CameraFrameDecodeError,
+    CameraStreamFrameError,
+)
+from app.services.detection.mediapipe_detector import MediaPipeDependencyError
+from app.services.recognition.facenet_recognizer import (
+    FaceNetDependencyError,
+    KnownFaceIndexError,
 )
 from app.models.auth import AdminUserPublic
 from app.services.attendance.attendance_service import (
@@ -72,3 +83,22 @@ def export_attendance_sheet(
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
     )
+
+
+@router.post("/sessions/{session_id}/recognize", response_model=AttendanceRecognitionResult)
+def recognize_attendance(
+    session_id: int,
+    current_admin: AdminUserPublic = Depends(get_current_admin),
+) -> AttendanceRecognitionResult:
+    try:
+        return AttendanceService().recognize_attendance(session_id)
+    except AttendanceSessionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FaceNetDependencyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except MediaPipeDependencyError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except (CameraConnectionError, CameraStreamFrameError) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except (CameraFrameDecodeError, KnownFaceIndexError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
