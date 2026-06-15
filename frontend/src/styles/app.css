@@ -277,6 +277,45 @@ input:focus {
   margin-bottom: 16px;
 }
 
+.recognition-panel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px;
+  border: 1px solid #facc15;
+  border-radius: 8px;
+  background: #fffbeb;
+}
+
+.recognition-panel.success {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.recognition-panel div {
+  display: grid;
+  gap: 2px;
+}
+
+.recognition-panel span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.recognition-panel strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.recognition-panel p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #475569;
+}
+
 .metric {
   background: #ffffff;
   border: 1px solid #d8dee8;
@@ -362,5 +401,9 @@ th {
 
   .summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .recognition-panel {
+    grid-template-columns: 1fr 1fr;
   }
 }

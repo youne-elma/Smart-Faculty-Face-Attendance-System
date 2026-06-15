@@ -99,6 +99,15 @@ class AttendanceService:
                 message="No face detected",
             )
 
+        if len(faces) > 1:
+            return AttendanceRecognitionResult(
+                session_id=session_id,
+                faces_count=len(faces),
+                recognized=False,
+                threshold=recognizer.threshold,
+                message="Multiple faces detected. Ask students to pass one by one.",
+            )
+
         known_embeddings = recognizer.build_known_index()
         face = max(faces, key=lambda item: item.width * item.height)
         match = recognizer.find_best_match(frame, face, known_embeddings)
@@ -108,6 +117,7 @@ class AttendanceService:
                 session_id=session_id,
                 faces_count=len(faces),
                 recognized=False,
+                threshold=recognizer.threshold,
                 message="No known face match found",
             )
 
@@ -119,6 +129,7 @@ class AttendanceService:
                 student_code=match.student_id,
                 display_name=match.display_name,
                 score=match.score,
+                threshold=recognizer.threshold,
                 message="Best match score is below threshold",
             )
 
@@ -131,6 +142,7 @@ class AttendanceService:
                 student_code=match.student_id,
                 display_name=match.display_name,
                 score=match.score,
+                threshold=recognizer.threshold,
                 message="Student recognized but not found in this attendance session",
             )
 
@@ -141,6 +153,7 @@ class AttendanceService:
             student_code=match.student_id,
             display_name=match.display_name,
             score=match.score,
+            threshold=recognizer.threshold,
             status=str(record["status"]),
             message="Attendance marked as present",
         )

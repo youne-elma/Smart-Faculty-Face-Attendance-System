@@ -10,6 +10,7 @@ import {
   RefreshCcw,
   Shield,
   Upload,
+  UserCheck,
 } from "lucide-react";
 import { api, ApiError } from "./services/api";
 import "./styles/app.css";
@@ -31,6 +32,7 @@ function App() {
   const [loginForm, setLoginForm] = useState({ username: "admin", password: "" });
   const [sessionForm, setSessionForm] = useState(initialSessionForm);
   const [message, setMessage] = useState("");
+  const [recognitionResult, setRecognitionResult] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const authedApi = useMemo(() => api.withToken(token), [token]);
@@ -80,6 +82,7 @@ function App() {
     setSessions([]);
     setSelectedSession(null);
     setSessionDetail(null);
+    setRecognitionResult(null);
   }
 
   async function createSession(event) {
@@ -151,8 +154,9 @@ function App() {
 
     try {
       const result = await authedApi.post(`/attendance/sessions/${selectedSession.id}/recognize`, {});
+      setRecognitionResult(result);
       await openSession(selectedSession.id);
-      setMessage(result.message);
+      setMessage(formatRecognitionMessage(result));
     } catch (error) {
       handleError(error);
     } finally {
@@ -176,6 +180,28 @@ function App() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function refreshRecognitionIndex() {
+    setBusy(true);
+    setMessage("");
+
+    try {
+      const result = await authedApi.post("/recognition/known-index/refresh", {});
+      setMessage(`Index FaceNet rafraichi: ${result.known_embeddings_count} embeddings.`);
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function formatRecognitionMessage(result) {
+    const score = result.score == null ? "" : ` Score ${Number(result.score).toFixed(3)}.`;
+    const threshold =
+      result.threshold == null ? "" : ` Seuil ${Number(result.threshold).toFixed(3)}.`;
+    const student = result.display_name ? ` ${result.display_name}.` : "";
+    return `${result.message}.${student}${score}${threshold}`;
   }
 
   function handleError(error) {
@@ -326,11 +352,45 @@ function App() {
                 <Camera size={16} />
                 Identifier
               </button>
+              <button className="secondary-action" onClick={refreshRecognitionIndex} disabled={busy}>
+                <UserCheck size={16} />
+                Refresh FaceNet
+              </button>
               <button className="secondary-action" onClick={exportSheet} disabled={busy}>
                 <Download size={16} />
                 Export
               </button>
             </div>
+
+            {recognitionResult && (
+              <div className={`recognition-panel ${recognitionResult.recognized ? "success" : "warning"}`}>
+                <div>
+                  <span>Visages</span>
+                  <strong>{recognitionResult.faces_count}</strong>
+                </div>
+                <div>
+                  <span>Etudiant</span>
+                  <strong>{recognitionResult.display_name || "Non reconnu"}</strong>
+                </div>
+                <div>
+                  <span>Score</span>
+                  <strong>
+                    {recognitionResult.score == null
+                      ? "-"
+                      : Number(recognitionResult.score).toFixed(3)}
+                  </strong>
+                </div>
+                <div>
+                  <span>Seuil</span>
+                  <strong>
+                    {recognitionResult.threshold == null
+                      ? "-"
+                      : Number(recognitionResult.threshold).toFixed(3)}
+                  </strong>
+                </div>
+                <p>{recognitionResult.message}</p>
+              </div>
+            )}
 
             <div className="summary-grid">
               <Metric label="Total" value={sessionDetail?.records?.length || 0} />

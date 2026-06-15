@@ -61,5 +61,6 @@ class AttendanceRecognitionResult(BaseModel):
     student_code: str | None = None
     display_name: str | None = None
     score: float | None = None
+    threshold: float | None = None
     status: str | None = None
     message: str
