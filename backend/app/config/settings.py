@@ -15,9 +15,9 @@ class Settings(BaseSettings):
     app_env: str = "development"
     api_prefix: str = "/api/v1"
 
-    esp32_cam_url: str = "http://192.168.1.30/"
+    esp32_cam_url: str = "http://192.168.1.18/"
     esp32_cam_snapshot_path: str = "/capture"
-    esp32_cam_stream_url: str = "http://192.168.1.30:81/stream"
+    esp32_cam_stream_url: str = "http://192.168.1.18:81/stream"
     camera_timeout_seconds: int = 5
     camera_stream_read_bytes: int = 65_536
 
@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     models_dir: Path = Field(default=BASE_DIR / "backend/data/models")
     benchmarks_dir: Path = Field(default=BASE_DIR / "backend/data/benchmarks")
 
-    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173", "http://192.168.1.8:5173"]
 
     @model_validator(mode="after")
     def resolve_relative_paths(self) -> "Settings":

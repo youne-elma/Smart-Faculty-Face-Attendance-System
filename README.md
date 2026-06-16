@@ -303,6 +303,9 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/recognition/identify`: reconnaissance FaceNet sur la frame camera courante.
 - `POST /api/v1/recognition/known-index/refresh`: rafraichissement des embeddings connus, protege par JWT.
 - `GET /api/v1/students/known`: liste des etudiants connus et des photos de reference disponibles.
+- `POST /api/v1/metrics/recognition/run`: benchmark capture, detection et reconnaissance.
+- `GET /api/v1/metrics/benchmarks`: liste des fichiers CSV de benchmark.
+- `GET /api/v1/metrics/benchmarks/{file_name}`: telechargement d'un benchmark CSV.
 - `GET /api/v1/students`: liste des etudiants en base, protegee par JWT.
 - `POST /api/v1/students`: creation d'un etudiant, protegee par JWT.
 - `GET /api/v1/students/{student_code}`: detail d'un etudiant, protege par JWT.
@@ -341,6 +344,13 @@ Rafraichir l'index FaceNet apres ajout de photos:
 
 ```powershell
 Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/recognition/known-index/refresh -Headers $headers
+```
+
+Benchmark MediaPipe + FaceNet:
+
+```powershell
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/metrics/recognition/run -Headers $headers
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/metrics/benchmarks -Headers $headers
 ```
 
 Test login admin:
