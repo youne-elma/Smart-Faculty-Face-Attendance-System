@@ -4,6 +4,7 @@ from app.api.dependencies import get_current_admin
 from app.models.attendance import (
     AttendanceImportResult,
     AttendanceRecognitionResult,
+    IdentificationStatus,
     AttendanceSessionCreate,
     AttendanceSessionDetail,
     AttendanceSessionRead,
@@ -22,6 +23,10 @@ from app.models.auth import AdminUserPublic
 from app.services.attendance.attendance_service import (
     AttendanceService,
     AttendanceSessionNotFoundError,
+)
+from app.services.attendance.identification_manager import (
+    IdentificationAlreadyRunningError,
+    identification_manager,
 )
 
 router = APIRouter()
@@ -102,3 +107,32 @@ def recognize_attendance(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except (CameraFrameDecodeError, KnownFaceIndexError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post("/sessions/{session_id}/identification/start", response_model=IdentificationStatus)
+def start_identification(
+    session_id: int,
+    current_admin: AdminUserPublic = Depends(get_current_admin),
+) -> IdentificationStatus:
+    try:
+        return identification_manager.start(session_id)
+    except AttendanceSessionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except IdentificationAlreadyRunningError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post("/sessions/{session_id}/identification/stop", response_model=IdentificationStatus)
+def stop_identification(
+    session_id: int,
+    current_admin: AdminUserPublic = Depends(get_current_admin),
+) -> IdentificationStatus:
+    return identification_manager.stop()
+
+
+@router.get("/sessions/{session_id}/identification/status", response_model=IdentificationStatus)
+def identification_status(
+    session_id: int,
+    current_admin: AdminUserPublic = Depends(get_current_admin),
+) -> IdentificationStatus:
+    return identification_manager.status()

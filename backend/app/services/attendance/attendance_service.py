@@ -82,7 +82,7 @@ class AttendanceService:
         file_bytes = AttendanceExcelWriter().write_session_export(detail, detail.records)
         return file_name, file_bytes
 
-    def recognize_attendance(self, session_id: int) -> AttendanceRecognitionResult:
+    def recognize_attendance(self, session_id: int, processing_callback=None) -> AttendanceRecognitionResult:
         if self.repository.get_session(session_id) is None:
             raise AttendanceSessionNotFoundError(f"Attendance session not found: {session_id}")
 
@@ -91,6 +91,9 @@ class AttendanceService:
         recognizer = get_facenet_recognizer()
 
         faces = detector.detect(frame)
+        if faces and processing_callback:
+            processing_callback(True)
+
         if not faces:
             return AttendanceRecognitionResult(
                 session_id=session_id,
@@ -131,6 +134,20 @@ class AttendanceService:
                 score=match.score,
                 threshold=recognizer.threshold,
                 message="Best match score is below threshold",
+            )
+
+        existing_record = self.repository.get_record_by_student_code(session_id, match.student_id)
+        if existing_record is not None and str(existing_record["status"]) == "present":
+            return AttendanceRecognitionResult(
+                session_id=session_id,
+                faces_count=len(faces),
+                recognized=True,
+                student_code=match.student_id,
+                display_name=match.display_name,
+                score=match.score,
+                threshold=recognizer.threshold,
+                status=str(existing_record["status"]),
+                message="Student already marked present",
             )
 
         record = self.repository.mark_present(session_id, match.student_id, match.score)

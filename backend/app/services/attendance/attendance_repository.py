@@ -199,6 +199,9 @@ class AttendanceRepository:
             if record is None:
                 return None
 
+            if str(record["status"]) == "present":
+                return self.get_record_by_student_code(session_id, student_code)
+
             connection.execute(
                 """
                 UPDATE attendance_records

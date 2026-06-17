@@ -109,10 +109,17 @@ input:focus {
 }
 
 .secondary-action,
-.file-action {
+.file-action,
+.danger-action {
   color: #0f172a;
   background: #ffffff;
   border-color: #cbd5e1;
+}
+
+.danger-action {
+  color: #991b1b;
+  border-color: #fecaca;
+  background: #fff1f2;
 }
 
 .primary-action:disabled,
@@ -314,6 +321,20 @@ input:focus {
   grid-column: 1 / -1;
   margin: 0;
   color: #475569;
+}
+
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  min-height: 36px;
+  border-radius: 6px;
+  padding: 0 12px;
+  color: #075985;
+  background: #e0f2fe;
+  border: 1px solid #7dd3fc;
+  font-weight: 800;
 }
 
 .metric {

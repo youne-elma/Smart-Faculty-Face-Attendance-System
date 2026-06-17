@@ -292,6 +292,9 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/attendance/sessions/{session_id}`: detail d'une session avec records, protege par JWT.
 - `POST /api/v1/attendance/sessions/{session_id}/import`: import Excel des etudiants attendus.
 - `POST /api/v1/attendance/sessions/{session_id}/recognize`: reconnaissance camera et marquage present.
+- `POST /api/v1/attendance/sessions/{session_id}/identification/start`: demarrage de l'identification continue avec LED `ready`.
+- `POST /api/v1/attendance/sessions/{session_id}/identification/stop`: arret de l'identification continue et extinction des LEDs.
+- `GET /api/v1/attendance/sessions/{session_id}/identification/status`: statut de l'identification continue.
 - `GET /api/v1/attendance/sessions/{session_id}/export`: export Excel des presences et absences.
 - `GET /api/v1/camera/status`: verification de disponibilite de l'ESP32-CAM.
 - `GET /api/v1/database/status`: statut de la base SQLite locale.
@@ -413,6 +416,30 @@ Reconnaissance et marquage automatique:
 Invoke-RestMethod -Method Post "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)/recognize" -Headers $headers
 Invoke-RestMethod "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)" -Headers $headers
 ```
+
+Identification continue avec LEDs ESP32:
+
+```powershell
+Invoke-RestMethod -Method Post "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)/identification/start" -Headers $headers
+Invoke-RestMethod "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)/identification/status" -Headers $headers
+Invoke-RestMethod -Method Post "http://127.0.0.1:8000/api/v1/attendance/sessions/$($createdSession.id)/identification/stop" -Headers $headers
+```
+
+Configuration LEDs:
+
+```env
+ESP32_LED_BASE_URL=http://192.168.1.18/
+LED_TIMEOUT_SECONDS=2
+IDENTIFICATION_LOOP_INTERVAL_SECONDS=1.0
+RECOGNIZED_LED_PULSE_SECONDS=1.2
+```
+
+Pendant l'identification continue:
+
+- `ready` reste allumee tant que la boucle est active.
+- `processing` s'allume quand un visage est detecte dans la frame.
+- `recognized` s'allume brievement quand une nouvelle presence est marquee.
+- Un etudiant deja marque `present` n'est pas marque en boucle une deuxieme fois.
 
 Commandes frontend:
 

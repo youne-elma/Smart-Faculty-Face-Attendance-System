@@ -64,3 +64,10 @@ class AttendanceRecognitionResult(BaseModel):
     threshold: float | None = None
     status: str | None = None
     message: str
+
+
+class IdentificationStatus(BaseModel):
+    running: bool
+    session_id: int | None = None
+    last_result: AttendanceRecognitionResult | None = None
+    last_error: str | None = None

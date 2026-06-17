@@ -18,8 +18,12 @@ class Settings(BaseSettings):
     esp32_cam_url: str = "http://192.168.1.18/"
     esp32_cam_snapshot_path: str = "/capture"
     esp32_cam_stream_url: str = "http://192.168.1.18:81/stream"
+    esp32_led_base_url: str = "http://192.168.1.18/"
     camera_timeout_seconds: int = 5
     camera_stream_read_bytes: int = 65_536
+    led_timeout_seconds: int = 2
+    identification_loop_interval_seconds: float = 1.0
+    recognized_led_pulse_seconds: float = 1.2
 
     facenet_pretrained_model: str = "vggface2"
     face_recognition_threshold: float = 0.7

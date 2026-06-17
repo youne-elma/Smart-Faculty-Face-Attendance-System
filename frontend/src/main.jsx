@@ -6,9 +6,11 @@ import {
   Download,
   FileSpreadsheet,
   LogOut,
+  Play,
   Plus,
   RefreshCcw,
   Shield,
+  Square,
   Upload,
   UserCheck,
 } from "lucide-react";
@@ -33,6 +35,7 @@ function App() {
   const [sessionForm, setSessionForm] = useState(initialSessionForm);
   const [message, setMessage] = useState("");
   const [recognitionResult, setRecognitionResult] = useState(null);
+  const [identificationStatus, setIdentificationStatus] = useState(null);
   const [busy, setBusy] = useState(false);
 
   const authedApi = useMemo(() => api.withToken(token), [token]);
@@ -41,6 +44,17 @@ function App() {
     if (!token) return;
     loadInitialData();
   }, [token]);
+
+  useEffect(() => {
+    if (!token || !selectedSession || !identificationStatus?.running) return;
+
+    const intervalId = window.setInterval(() => {
+      loadIdentificationStatus(selectedSession.id);
+      openSession(selectedSession.id);
+    }, 1500);
+
+    return () => window.clearInterval(intervalId);
+  }, [token, selectedSession?.id, identificationStatus?.running]);
 
   async function loadInitialData() {
     try {
@@ -83,6 +97,7 @@ function App() {
     setSelectedSession(null);
     setSessionDetail(null);
     setRecognitionResult(null);
+    setIdentificationStatus(null);
   }
 
   async function createSession(event) {
@@ -121,6 +136,7 @@ function App() {
     const detail = await authedApi.get(`/attendance/sessions/${sessionId}`);
     setSelectedSession(detail);
     setSessionDetail(detail);
+    await loadIdentificationStatus(sessionId);
   }
 
   async function importSheet(event) {
@@ -147,20 +163,60 @@ function App() {
     }
   }
 
-  async function recognizeCurrentStudent() {
+  async function startIdentification() {
     if (!selectedSession) return;
     setBusy(true);
     setMessage("");
 
     try {
-      const result = await authedApi.post(`/attendance/sessions/${selectedSession.id}/recognize`, {});
-      setRecognitionResult(result);
+      const status = await authedApi.post(
+        `/attendance/sessions/${selectedSession.id}/identification/start`,
+        {},
+      );
+      setIdentificationStatus(status);
+      setRecognitionResult(status.last_result);
       await openSession(selectedSession.id);
-      setMessage(formatRecognitionMessage(result));
+      setMessage("Identification continue demarree.");
     } catch (error) {
       handleError(error);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function stopIdentification() {
+    if (!selectedSession) return;
+    setBusy(true);
+    setMessage("");
+
+    try {
+      const status = await authedApi.post(
+        `/attendance/sessions/${selectedSession.id}/identification/stop`,
+        {},
+      );
+      setIdentificationStatus(status);
+      setRecognitionResult(status.last_result);
+      await openSession(selectedSession.id);
+      setMessage("Identification arretee.");
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loadIdentificationStatus(sessionId) {
+    try {
+      const status = await authedApi.get(`/attendance/sessions/${sessionId}/identification/status`);
+      setIdentificationStatus(status);
+      if (status.last_result) {
+        setRecognitionResult(status.last_result);
+      }
+      if (status.last_error) {
+        setMessage(status.last_error);
+      }
+    } catch {
+      // Status polling should not interrupt the main workflow.
     }
   }
 
@@ -348,10 +404,17 @@ function App() {
                 Import Excel
                 <input type="file" accept=".xlsx,.xlsm" onChange={importSheet} />
               </label>
-              <button className="secondary-action" onClick={recognizeCurrentStudent} disabled={busy}>
-                <Camera size={16} />
-                Identifier
-              </button>
+              {identificationStatus?.running ? (
+                <button className="danger-action" onClick={stopIdentification} disabled={busy}>
+                  <Square size={16} />
+                  Arreter
+                </button>
+              ) : (
+                <button className="secondary-action" onClick={startIdentification} disabled={busy}>
+                  <Play size={16} />
+                  Identifier
+                </button>
+              )}
               <button className="secondary-action" onClick={refreshRecognitionIndex} disabled={busy}>
                 <UserCheck size={16} />
                 Refresh FaceNet
@@ -389,6 +452,13 @@ function App() {
                   </strong>
                 </div>
                 <p>{recognitionResult.message}</p>
+              </div>
+            )}
+
+            {identificationStatus?.running && (
+              <div className="live-indicator">
+                <Camera size={16} />
+                Identification continue active
               </div>
             )}
 
