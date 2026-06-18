@@ -10,6 +10,7 @@ from app.models.face import FaceBox
 from app.models.recognition import RecognitionMatch
 from app.models.student import KnownStudent
 from app.services.detection.mediapipe_detector import get_mediapipe_face_detector
+from app.services.recognition.embedding_repository import FaceEmbeddingRepository
 from app.services.students.student_service import StudentService
 
 
@@ -39,6 +40,11 @@ class FaceNetRecognizer:
         if self._known_index_cache is not None:
             return self._known_index_cache
 
+        stored_embeddings = self._build_index_from_database()
+        if stored_embeddings:
+            self._known_index_cache = stored_embeddings
+            return stored_embeddings
+
         students = StudentService().list_known_students().students
         detector = get_mediapipe_face_detector()
         known_embeddings: list[KnownFaceEmbedding] = []
@@ -60,6 +66,33 @@ class FaceNetRecognizer:
                 known_embeddings.append(KnownFaceEmbedding(student=student, embedding=embedding))
 
         self._known_index_cache = known_embeddings
+        return known_embeddings
+
+    def _build_index_from_database(self) -> list[KnownFaceEmbedding]:
+        rows = FaceEmbeddingRepository().list_embeddings(self.name)
+        known_embeddings: list[KnownFaceEmbedding] = []
+
+        for row in rows:
+            embedding = np.frombuffer(row["embedding"], dtype=np.float32)
+            if embedding.size != int(row["dimension"]):
+                continue
+
+            student = KnownStudent(
+                student_id=str(row["student_code"]),
+                first_name=str(row["first_name"]),
+                last_name=str(row["last_name"]),
+                display_name=f"{row['student_code']} - {row['first_name']} {row['last_name']}",
+                photos_count=0,
+                photos=[],
+                source="database_embeddings",
+            )
+            known_embeddings.append(
+                KnownFaceEmbedding(
+                    student=student,
+                    embedding=embedding,
+                )
+            )
+
         return known_embeddings
 
     def refresh_known_index(self) -> list[KnownFaceEmbedding]:

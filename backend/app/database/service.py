@@ -8,8 +8,10 @@ SCHEMA_PATH = BASE_DIR / "backend/app/database/schema.sql"
 EXPECTED_TABLES = {
     "students",
     "student_photos",
+    "face_embeddings",
     "attendance_sessions",
     "attendance_records",
+    "recognition_events",
     "admin_users",
 }
 
@@ -64,5 +66,65 @@ class DatabaseService:
             """
             CREATE INDEX IF NOT EXISTS idx_attendance_sessions_admin_user_id
             ON attendance_sessions(admin_user_id);
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS face_embeddings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                student_id INTEGER NOT NULL,
+                student_photo_id INTEGER,
+                model_name TEXT NOT NULL,
+                embedding BLOB NOT NULL,
+                dimension INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+                FOREIGN KEY (student_photo_id) REFERENCES student_photos(id) ON DELETE SET NULL,
+                UNIQUE (student_id, student_photo_id, model_name)
+            );
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_face_embeddings_student_id
+            ON face_embeddings(student_id);
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_face_embeddings_model_name
+            ON face_embeddings(model_name);
+            """
+        )
+
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS recognition_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER NOT NULL,
+                student_id INTEGER,
+                student_code TEXT,
+                recognized INTEGER NOT NULL DEFAULT 0,
+                message TEXT NOT NULL,
+                score REAL,
+                threshold REAL,
+                faces_count INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (session_id) REFERENCES attendance_sessions(id) ON DELETE CASCADE,
+                FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL
+            );
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_recognition_events_session_id
+            ON recognition_events(session_id);
+            """
+        )
+        connection.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_recognition_events_created_at
+            ON recognition_events(created_at);
             """
         )
