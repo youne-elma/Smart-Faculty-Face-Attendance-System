@@ -400,6 +400,57 @@ th {
   background: #dcfce7;
 }
 
+.audit-section {
+  display: grid;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.audit-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.audit-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.audit-metrics .metric strong {
+  font-size: 22px;
+}
+
+.audit-table table {
+  min-width: 920px;
+}
+
+.event-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: #854d0e;
+  background: #fef3c7;
+  font-size: 13px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.event-pill.recognized {
+  color: #14532d;
+  background: #dcfce7;
+}
+
+.muted-cell {
+  color: #64748b;
+  text-align: center;
+}
+
 .empty-state {
   display: grid;
   place-items: center;
@@ -421,6 +472,10 @@ th {
   }
 
   .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .audit-metrics {
     grid-template-columns: 1fr;
   }
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  Activity,
   Camera,
   CheckCircle2,
   Download,
@@ -31,6 +32,7 @@ function App() {
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
   const [sessionDetail, setSessionDetail] = useState(null);
+  const [recognitionEvents, setRecognitionEvents] = useState([]);
   const [loginForm, setLoginForm] = useState({ username: "admin", password: "" });
   const [sessionForm, setSessionForm] = useState(initialSessionForm);
   const [message, setMessage] = useState("");
@@ -96,6 +98,7 @@ function App() {
     setSessions([]);
     setSelectedSession(null);
     setSessionDetail(null);
+    setRecognitionEvents([]);
     setRecognitionResult(null);
     setIdentificationStatus(null);
   }
@@ -133,9 +136,13 @@ function App() {
   }
 
   async function openSession(sessionId) {
-    const detail = await authedApi.get(`/attendance/sessions/${sessionId}`);
+    const [detail, events] = await Promise.all([
+      authedApi.get(`/attendance/sessions/${sessionId}`),
+      authedApi.get(`/attendance/sessions/${sessionId}/events?limit=100`),
+    ]);
     setSelectedSession(detail);
     setSessionDetail(detail);
+    setRecognitionEvents(events);
     await loadIdentificationStatus(sessionId);
   }
 
@@ -238,6 +245,24 @@ function App() {
     }
   }
 
+  async function exportRecognitionEvents() {
+    if (!selectedSession) return;
+    setBusy(true);
+    setMessage("");
+
+    try {
+      await authedApi.download(
+        `/attendance/sessions/${selectedSession.id}/events/export`,
+        `recognition_events_session_${selectedSession.id}.xlsx`,
+      );
+      setMessage("Journal exporte.");
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function refreshRecognitionIndex() {
     setBusy(true);
     setMessage("");
@@ -259,6 +284,30 @@ function App() {
     const student = result.display_name ? ` ${result.display_name}.` : "";
     return `${result.message}.${student}${score}${threshold}`;
   }
+
+  function formatTime(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  }
+
+  const eventStats = useMemo(() => {
+    const total = recognitionEvents.length;
+    const recognized = recognitionEvents.filter((event) => event.recognized).length;
+    const belowThreshold = recognitionEvents.filter((event) =>
+      event.message.toLowerCase().includes("below threshold"),
+    ).length;
+    const multipleFaces = recognitionEvents.filter((event) => event.faces_count > 1).length;
+
+    return {
+      total,
+      recognized,
+      rejected: total - recognized,
+      belowThreshold,
+      multipleFaces,
+    };
+  }, [recognitionEvents]);
 
   function handleError(error) {
     if (error instanceof ApiError) {
@@ -505,6 +554,66 @@ function App() {
                 </tbody>
               </table>
             </div>
+
+            <section className="audit-section">
+              <div className="audit-header">
+                <div className="section-title">
+                  <Activity size={16} />
+                  <span>Journal d'identification</span>
+                </div>
+                <button className="secondary-action" onClick={exportRecognitionEvents} disabled={busy}>
+                  <Download size={16} />
+                  Export journal
+                </button>
+              </div>
+
+              <div className="audit-metrics">
+                <Metric label="Tentatives" value={eventStats.total} />
+                <Metric label="Reconnues" value={eventStats.recognized} />
+                <Metric label="Rejetees" value={eventStats.rejected} />
+                <Metric label="Sous seuil" value={eventStats.belowThreshold} />
+                <Metric label="Multi-visages" value={eventStats.multipleFaces} />
+              </div>
+
+              <div className="table-wrap audit-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Heure</th>
+                      <th>Resultat</th>
+                      <th>Etudiant</th>
+                      <th>Score</th>
+                      <th>Seuil</th>
+                      <th>Visages</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recognitionEvents.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="muted-cell">
+                          Aucun evenement d'identification.
+                        </td>
+                      </tr>
+                    ) : (
+                      recognitionEvents.map((event) => (
+                        <tr key={event.id}>
+                          <td>{formatTime(event.created_at)}</td>
+                          <td>
+                            <span className={`event-pill ${event.recognized ? "recognized" : ""}`}>
+                              {event.message}
+                            </span>
+                          </td>
+                          <td>{event.student_code || "-"}</td>
+                          <td>{event.score == null ? "-" : Number(event.score).toFixed(3)}</td>
+                          <td>{event.threshold == null ? "-" : Number(event.threshold).toFixed(3)}</td>
+                          <td>{event.faces_count}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </>
         ) : (
           <div className="empty-state">Cree ou selectionne une session.</div>

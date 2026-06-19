@@ -488,7 +488,7 @@ Cette adresse doit rester configurable pour permettre un changement de reseau ou
 
 - Code Python pour Raspberry Pi.
 - Interface web locale professeur/admin.
-- Module de detection Haar Cascade.
+- Module de detection MediaPipe Face.
 - Module de reconnaissance FaceNet.
 - Import de fiches d'absence.
 - Export Excel des presences et absences.
