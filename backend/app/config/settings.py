@@ -15,10 +15,10 @@ class Settings(BaseSettings):
     app_env: str = "development"
     api_prefix: str = "/api/v1"
 
-    esp32_cam_url: str = "http://192.168.1.18/"
+    esp32_cam_url: str = "http://192.168.1.19/"
     esp32_cam_snapshot_path: str = "/capture"
-    esp32_cam_stream_url: str = "http://192.168.1.18:81/stream"
-    esp32_led_base_url: str = "http://192.168.1.18/"
+    esp32_cam_stream_url: str = "http://192.168.1.19:81/stream"
+    esp32_led_base_url: str = "http://192.168.1.19/"
     camera_timeout_seconds: int = 5
     camera_stream_read_bytes: int = 65_536
     led_timeout_seconds: int = 2

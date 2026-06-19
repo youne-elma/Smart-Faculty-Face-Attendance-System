@@ -66,6 +66,30 @@ class AttendanceRecognitionResult(BaseModel):
     message: str
 
 
+class RecognitionEventCreate(BaseModel):
+    session_id: int
+    student_id: int | None = None
+    student_code: str | None = None
+    recognized: bool
+    message: str
+    score: float | None = None
+    threshold: float | None = None
+    faces_count: int = 0
+
+
+class RecognitionEventRead(BaseModel):
+    id: int
+    session_id: int
+    student_id: int | None = None
+    student_code: str | None = None
+    recognized: bool
+    message: str
+    score: float | None = None
+    threshold: float | None = None
+    faces_count: int
+    created_at: str
+
+
 class IdentificationStatus(BaseModel):
     running: bool
     session_id: int | None = None

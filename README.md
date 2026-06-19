@@ -130,8 +130,10 @@ Tables SQLite prevues:
 
 - `students`: informations des etudiants.
 - `student_photos`: references vers les photos des etudiants.
+- `face_embeddings`: embeddings faciaux generes depuis les photos de reference.
 - `attendance_sessions`: cours, examens ou sessions de presence.
 - `attendance_records`: statut de presence par etudiant et par session.
+- `recognition_events`: journal des tentatives d'identification pendant une session.
 - `admin_users`: comptes administrateurs/professeurs avec mot de passe hache.
 
 Relation importante:
@@ -292,6 +294,8 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/attendance/sessions/{session_id}`: detail d'une session avec records, protege par JWT.
 - `POST /api/v1/attendance/sessions/{session_id}/import`: import Excel des etudiants attendus.
 - `POST /api/v1/attendance/sessions/{session_id}/recognize`: reconnaissance camera et marquage present.
+- `GET /api/v1/attendance/sessions/{session_id}/events`: journal des tentatives de reconnaissance.
+- `GET /api/v1/attendance/sessions/{session_id}/events/export`: export Excel du journal de reconnaissance.
 - `POST /api/v1/attendance/sessions/{session_id}/identification/start`: demarrage de l'identification continue avec LED `ready`.
 - `POST /api/v1/attendance/sessions/{session_id}/identification/stop`: arret de l'identification continue et extinction des LEDs.
 - `GET /api/v1/attendance/sessions/{session_id}/identification/status`: statut de l'identification continue.
@@ -305,6 +309,8 @@ Routes disponibles dans la premiere version backend:
 - `GET /api/v1/detection/preview`: image JPEG annotee avec rectangles de detection.
 - `GET /api/v1/recognition/identify`: reconnaissance FaceNet sur la frame camera courante.
 - `POST /api/v1/recognition/known-index/refresh`: rafraichissement des embeddings connus, protege par JWT.
+- `POST /api/v1/embeddings/rebuild`: generation et stockage SQLite des embeddings FaceNet.
+- `GET /api/v1/embeddings/stats`: statistiques des embeddings stockes.
 - `GET /api/v1/students/known`: liste des etudiants connus et des photos de reference disponibles.
 - `POST /api/v1/metrics/recognition/run`: benchmark capture, detection et reconnaissance.
 - `GET /api/v1/metrics/benchmarks`: liste des fichiers CSV de benchmark.
@@ -341,6 +347,19 @@ Synchroniser les photos locales vers SQLite:
 
 ```powershell
 python scripts/sync_known_faces.py
+```
+
+Generer et enregistrer les embeddings FaceNet dans SQLite:
+
+```powershell
+python scripts/rebuild_embeddings.py
+```
+
+Via API:
+
+```powershell
+Invoke-RestMethod -Method Post http://127.0.0.1:8000/api/v1/embeddings/rebuild -Headers $headers
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/embeddings/stats -Headers $headers
 ```
 
 Rafraichir l'index FaceNet apres ajout de photos:

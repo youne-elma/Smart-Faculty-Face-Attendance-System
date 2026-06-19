@@ -3,7 +3,7 @@ from typing import Any
 
 from openpyxl import Workbook, load_workbook
 
-from app.models.attendance import AttendanceRecordRead, AttendanceSessionRead
+from app.models.attendance import AttendanceRecordRead, AttendanceSessionRead, RecognitionEventRead
 
 
 HEADER_ALIASES = {
@@ -155,6 +155,53 @@ class AttendanceExcelWriter:
                     record.status,
                     record.recognized_at or "",
                     record.recognition_score if record.recognition_score is not None else "",
+                ]
+            )
+
+        output = BytesIO()
+        workbook.save(output)
+        return output.getvalue()
+
+    def write_recognition_events_export(
+        self,
+        session: AttendanceSessionRead,
+        events: list[RecognitionEventRead],
+    ) -> bytes:
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = "Recognition Events"
+
+        sheet.append(["Session", session.title])
+        sheet.append(["Type", session.session_type])
+        sheet.append(["Course", session.course_name or ""])
+        sheet.append(["Group", session.group_name or ""])
+        sheet.append([])
+        sheet.append(
+            [
+                "Created At",
+                "Session ID",
+                "Student ID",
+                "Student Code",
+                "Recognized",
+                "Message",
+                "Score",
+                "Threshold",
+                "Faces Count",
+            ]
+        )
+
+        for event in events:
+            sheet.append(
+                [
+                    event.created_at,
+                    event.session_id,
+                    event.student_id if event.student_id is not None else "",
+                    event.student_code or "",
+                    "yes" if event.recognized else "no",
+                    event.message,
+                    event.score if event.score is not None else "",
+                    event.threshold if event.threshold is not None else "",
+                    event.faces_count,
                 ]
             )
 

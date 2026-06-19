@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
 
 from app.api.dependencies import get_current_admin
 from app.models.attendance import (
     AttendanceImportResult,
     AttendanceRecognitionResult,
     IdentificationStatus,
+    RecognitionEventRead,
     AttendanceSessionCreate,
     AttendanceSessionDetail,
     AttendanceSessionRead,
@@ -80,6 +81,35 @@ def export_attendance_sheet(
 ) -> Response:
     try:
         file_name, file_bytes = AttendanceService().export_session(session_id)
+    except AttendanceSessionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return Response(
+        content=file_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{file_name}"'},
+    )
+
+
+@router.get("/sessions/{session_id}/events", response_model=list[RecognitionEventRead])
+def list_recognition_events(
+    session_id: int,
+    limit: int = Query(default=200, ge=1, le=1000),
+    current_admin: AdminUserPublic = Depends(get_current_admin),
+) -> list[RecognitionEventRead]:
+    try:
+        return AttendanceService().list_recognition_events(session_id, limit)
+    except AttendanceSessionNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/sessions/{session_id}/events/export")
+def export_recognition_events(
+    session_id: int,
+    current_admin: AdminUserPublic = Depends(get_current_admin),
+) -> Response:
+    try:
+        file_name, file_bytes = AttendanceService().export_recognition_events(session_id)
     except AttendanceSessionNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 

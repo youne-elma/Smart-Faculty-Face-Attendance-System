@@ -23,6 +23,19 @@ CREATE TABLE IF NOT EXISTS student_photos (
     UNIQUE (student_id, source_uri)
 );
 
+CREATE TABLE IF NOT EXISTS face_embeddings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    student_id INTEGER NOT NULL,
+    student_photo_id INTEGER,
+    model_name TEXT NOT NULL,
+    embedding BLOB NOT NULL,
+    dimension INTEGER NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_photo_id) REFERENCES student_photos(id) ON DELETE SET NULL,
+    UNIQUE (student_id, student_photo_id, model_name)
+);
+
 CREATE TABLE IF NOT EXISTS attendance_sessions (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     admin_user_id INTEGER,
@@ -50,6 +63,21 @@ CREATE TABLE IF NOT EXISTS attendance_records (
     UNIQUE (session_id, student_id)
 );
 
+CREATE TABLE IF NOT EXISTS recognition_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id INTEGER NOT NULL,
+    student_id INTEGER,
+    student_code TEXT,
+    recognized INTEGER NOT NULL DEFAULT 0,
+    message TEXT NOT NULL,
+    score REAL,
+    threshold REAL,
+    faces_count INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (session_id) REFERENCES attendance_sessions(id) ON DELETE CASCADE,
+    FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE SET NULL
+);
+
 CREATE TABLE IF NOT EXISTS admin_users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
@@ -61,5 +89,9 @@ CREATE TABLE IF NOT EXISTS admin_users (
 
 CREATE INDEX IF NOT EXISTS idx_students_student_code ON students(student_code);
 CREATE INDEX IF NOT EXISTS idx_student_photos_student_id ON student_photos(student_id);
+CREATE INDEX IF NOT EXISTS idx_face_embeddings_student_id ON face_embeddings(student_id);
+CREATE INDEX IF NOT EXISTS idx_face_embeddings_model_name ON face_embeddings(model_name);
 CREATE INDEX IF NOT EXISTS idx_attendance_records_session_id ON attendance_records(session_id);
 CREATE INDEX IF NOT EXISTS idx_attendance_records_student_id ON attendance_records(student_id);
+CREATE INDEX IF NOT EXISTS idx_recognition_events_session_id ON recognition_events(session_id);
+CREATE INDEX IF NOT EXISTS idx_recognition_events_created_at ON recognition_events(created_at);
